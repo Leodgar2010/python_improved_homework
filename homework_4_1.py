@@ -1,4 +1,5 @@
 # Напишите функцию для транспонирования матрицы
+
 def my_func(matrix):
     arr = []
     for i in range(len(matrix)):
