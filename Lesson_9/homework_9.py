@@ -9,28 +9,41 @@ import math
 import csv
 from random import randint
 
-def result (func):
-    with open(f"{func.__name__}.csv", 'r', encoding='UTF-8') as f:
-        for i in csv.reader(f):
-            a, b, c, = i
-            yield f"{i}",func(int(a), int(b), int(c))
 
-def csv_gen(func, a=randint(100,1000)):
-    with open(f"{func.__name__}.csv", 'w') as f:
+def csv_gen(a=randint(100, 1000)):
+    with open(f"source.csv", 'w') as f:
         wr = csv.writer(f, quoting=csv.QUOTE_ALL, dialect='unix')
         for i in range(a):
             lst = [int(randint(1, 100)) for i in range(3)]
             wr.writerow(lst)
 
+
+#
 def json_deco(func):
-    dic ={}
-    csv_gen(func)
-    for i in result(func):
-        dic[i[0]]=i[1]
-    with open(f"{func.__name__}.json", 'w', encoding='UTF-8') as f2:
-        json.dump(dic, f2, indent=1)
+    result = {}
+    with (open(f"source.csv", 'r', encoding='UTF-8') as f,
+          open(f"output.json", 'w', encoding='UTF-8') as f2):
+        data = csv.reader(f)
+        for i in data:
+            if i != None:
+                result[",".join(i)] = (func(*(int(j) for j in i)))
+        json.dump(result, f2, indent=2)
+    return func
 
 
+def deco_csv_source(func):
+    result = {}
+    with open(f"source.csv", 'r', encoding='UTF-8') as f:
+        data = csv.reader(f)
+        for i in data:
+            result[",".join(i)] = (func(*(int(j) for j in i)))
+        for k, v in result.items():
+            print(f"Аргументы: {k} Результат {v}")
+    return func
+
+
+@json_deco
+@deco_csv_source
 def homework_9(a, b, c):
     if a == 0:
         return None
@@ -45,7 +58,6 @@ def homework_9(a, b, c):
         return [f"{x}+ i*{sqrt_val}", f"{x}- i*{sqrt_val}"]
 
 
-
 if __name__ == "__main__":
-
-    json_deco(homework_9)
+    csv_gen()
+    homework_9
