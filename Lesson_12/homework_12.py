@@ -5,6 +5,10 @@
 # тестов (от 0 до 100). Также экземпляр должен сообщать средний балл
 # по тестам для каждого предмета и по оценкам всех предметов вместе взятых.
 import csv
+from errors import FoolCheckError
+
+ESTIMATE_MIN, ESTIMATE_MAX = 2, 5
+TEST_MIN, TEST_MAX = 0, 100
 
 
 class NameCheck:
@@ -40,31 +44,38 @@ class Student:
         self.lesson = Student.lesson_load(self)
 
     def lesson_load(self):
-        with open('subject.csv', 'r', encoding="utf-8") as f:
+        with open(f'subject.csv', 'r', encoding="utf-8") as f:
             result = {}
             for i in csv.reader(f):
                 result[i[0]] = {'estimate': [], 'test_result': [], 'middle_test': int()}
             return result
 
     def add_estimate(self, lesson, estimate):
-        if 2 <= estimate <= 5:
+        if ESTIMATE_MIN <= estimate <= ESTIMATE_MAX:
             self.lesson[lesson]['estimate'].append(estimate)
         else:
-            raise ValueError("Оценка должна быть в интервале от 2 до 5")
+            raise FoolCheckError('Оценка', estimate, ESTIMATE_MIN, ESTIMATE_MAX)
 
     def add_test(self, lesson, test):
         a = self.lesson[lesson]['test_result']
-        if 0 <= test <= 100:
+        if TEST_MIN <= test <= TEST_MAX:
             a.append(test)
             self.lesson[lesson]['middle_test'] = (sum(a)) / len(a)
         else:
-            raise ValueError("Результат теста должен быть от 0 до 100")
+            raise FoolCheckError('Результат теста', test, TEST_MIN, TEST_MAX)
 
     def middle_estimate(self):
         result = 0
         for i in self.lesson.keys():
             result += sum(self.lesson.get(i).get('estimate'))
         return result
+
+    def create_report(self):
+        with open(f'{self.last_name}.csv', 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, dialect='unix')
+            writer.writerow([i for i in self.lesson.keys()])
+            writer.writerow([self.lesson.get(i).get('estimate') for i in self.lesson.keys()])
+            writer.writerow([self.lesson.get(i).get('test_result') for i in self.lesson.keys()])
 
     def __repr__(self):
 
@@ -74,8 +85,9 @@ class Student:
 
 if __name__ == '__main__':
     s1 = Student("Вacя", "Пупкин")
-    s1.add_estimate("Математика", 2)
+    s1.add_estimate("Математика", 5)
     s1.add_estimate("Физика", 4)
-    s1.add_test('Математика', 25)
+    s1.add_test('Математика', 100)
     s1.add_test('Математика', 50)
-    print(f"{s1=}")
+    s1.add_test('Физика', 34)
+    s1.add_test('Физика', 70)
